@@ -43,6 +43,26 @@ def test_routeros7_uses_embedded_ros_device():
     assert all(call.kwargs["host_params"].device == "ros" for call in api.cmd.await_args_list)
 
 
+def test_sros_uses_nokia_device():
+    fetcher = GnetcliFetcher(url="127.0.0.1:50050")
+    device = SimpleNamespace(
+        breed="sros",
+        fqdn="router.example.net",
+        primary_ip=None,
+        interfaces=[],
+    )
+    api = Mock()
+    api.cmd = AsyncMock(return_value=pb.CMDResult(status=0, out=b"config"))
+
+    result = asyncio.run(fetcher.afetch_dev(api=api, device=device))
+
+    assert result == "config"
+    assert api.cmd.await_count == 1
+    call = api.cmd.await_args
+    assert call.kwargs["host_params"].device == "nokia_sros"
+    assert call.kwargs["cmd"] == "admin show configuration | no-more"
+
+
 @pytest.mark.parametrize(
     ("streamer_type", "dev_port", "expected_streamer_type"),
     [

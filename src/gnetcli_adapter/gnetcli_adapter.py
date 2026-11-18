@@ -54,6 +54,7 @@ breed_to_device = {
     "vrp85": "huawei",
     "vrp55": "huawei",
     "ipn": "sitonica",
+    "sros": "nokia_sros",
 }
 
 
@@ -152,6 +153,8 @@ async def get_config(breed: str) -> List[str]:
         return ["show running-config | no-more"]
     elif breed.startswith(("h3c", "vrp", "ipn")):
         return ["display current-configuration"]
+    elif breed.startswith("sros"):
+        return ["admin show configuration | no-more"]
     elif breed.startswith("aruos"):
         return ["show ap-env", "show running-config no-encrypt"]
     raise Exception("unknown breed %r" % breed)
@@ -639,4 +642,6 @@ class GnetcliDeployer(DeployDriver, AdapterWithConfig, AdapterWithName, ApiMaker
         ret = CommandList()
         if hw.Huawei or hw.H3C:
             ret.add_cmd(Command("quit", suppress_eof=True))
+        elif hw.Nokia:
+            ret.add_cmd(Command("logout", suppress_eof=True))
         return ret
